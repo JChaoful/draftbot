@@ -145,6 +145,8 @@ def __createSpreadDictionary(cardList):
 # Filter for commands being issued in the correct channels
 async def __allowChannel(message):
     # Check if command was issued in #draft and has two arguments
+    if message.channel.name == 'general':
+        await message.channel.send('https://www.youtube.com/watch?v=2cPW2xDKUIU')
     if isinstance(message.channel, discord.DMChannel) or message.channel.name not in ALLOWED_CHANNELS:
         outputMsg = 'Command can only be issued in channel(s) named '
         lastChannel = len(ALLOWED_CHANNELS) - 1

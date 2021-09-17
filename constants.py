@@ -1,6 +1,6 @@
 #------------DRAFT SPECIFICATIONS------------
 # 0 < PACK_SIZE <=15
-PACK_SIZE = 2
+PACK_SIZE = 3
 # If you do not want to use staples, set STAPLES_CUB to None
 # 0 < NUM_STAPLES <= 15
 NUM_STAPLES = 8
@@ -22,7 +22,7 @@ STAPLES_CUB = None
 
 # Draft creation limitations
 # 1 < NUM_PLAYERS
-NUM_PLAYERS = 4
+NUM_PLAYERS = 2
 ALLOWED_CHANNELS = ['draft', 'general']
 MAX_DRAFTS = 4
 

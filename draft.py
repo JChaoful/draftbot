@@ -25,6 +25,9 @@ reactions = constants.REACTIONS
 #Starting with a list that will hold pick data
 pickdata = [['Name', 'Pick', 'User', 'Cube']]
 
+shadow = 'spoilers/shadow.png'
+gem = 'spoilers/gem.png'
+
 #Stores their pool of picked cards and discord user. Store within drafts.
 class Player:
 
@@ -132,7 +135,8 @@ class Timer:
                         asyncio.create_task(player.user.send('Ran out of time. WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE DRAFT! WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE DRAFT! WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE DRAFT! https://tenor.com/view/wandavision-wanda-this-will-be-warning-gif-20683220'))
                     if player.missedpicks == 3:
                         asyncio.create_task(player.user.send('Ran out of time. You have been kicked for missing 3 picks. Three strikes! you\'re out! https://tenor.com/view/strike-ponche-bateador-strike-out-swing-gif-15388719'))
-                        self.draft.kick(player)
+                        asyncio.create_task(self.draft.channel.send('You\'re way too slow at picking.. Maybe these\'ll help?', file = discord.File(open(shadow, 'rb'))))
+                        self.draft.kick(player.user.id)
 
                     else:
                         asyncio.create_task(player.user.send('Ran out of time. You have automatically picked the first card in the pack. Please pay attention to avoid wasting time!'))
@@ -199,6 +203,8 @@ class Draft:
         minRoll = 48
         for i in range(numRolls):
             minRoll = min(random.randint(0, 47), minRoll)
+        if minRoll == 3:
+            asyncio.create_task(self.channel.send(file = discord.File(open(gem, 'rb'))))
         return minRoll
     
     # Checks if two specified players are paired against each other in a given round
@@ -302,7 +308,7 @@ class Draft:
                     outputMsg += ('\t' + player.user.name + ': ' + str(player.matchesWon) +
                         '-' + str(player.matchesLost) + ' = ' + str(chipsEarned) + ' chips')
                     if player.matchesWon > 0:
-                        loot = __roll(player.matchesWon)
+                        loot = self.__roll(player.matchesWon)
                         if loot < 20:
                             outputMsg += ' and ' + LOOT_TABLE[loot]
                         else:
@@ -415,46 +421,48 @@ class Draft:
                     self.updateStaplePack()
             # If NUM_PACKS have been opened and NUM_STAPLES have been selected, draft has concluded.
             else:
-                outputMsg = 'Round 1 Pairings:\n'
                 for player in self.players.values():
                     asyncio.create_task(player.user.send('The draft is now finished. ' + 
                     'Use !myydk or !mypool to get started on deckbuilding.'))
                     
+                  
                 # Round-Robin matchmaking, "Circle Method" algorithm with index 0 as the anchor
                 # For n players:
                 # If n is even, there will be n - 1 rounds
                 rotation = list(self.players.keys())
                 numPlayers = len(self.players)
-                if numPlayers % 2 == 0:
-                    numRounds = numPlayers - 1
-                # If n is odd, there will be n rounds
-                else:
-                    # Byes are represented by an extra round, shown as a "Ghost index" (-1)
-                    # for when there are an odd number of players
-                    numRounds = numPlayers
-                    rotation.append(-1)
+                # Skip if < 2 players available
+                if numPlayers > 1:  
+                    if numPlayers % 2 == 0:
+                        numRounds = numPlayers - 1
+                    # If n is odd, there will be n rounds
+                    else:
+                        # Byes are represented by an extra round, shown as a "Ghost index" (-1)
+                        # for when there are an odd number of players
+                        numRounds = numPlayers
+                        rotation.append(-1)
 
-                # Number of "players" that are rotated around. If n is even, numIndices = numPlayers
-                # if n is odd, numIndices = numPlayers + 1
-                numIndices = numRounds + 1
+                    # Number of "players" that are rotated around. If n is even, numIndices = numPlayers
+                    # if n is odd, numIndices = numPlayers + 1
+                    numIndices = numRounds + 1
 
-                rotatorIndices =  range(2, numIndices)
-                for rounds in range(numRounds):
-                    self.matches[rounds + 1] = []
-                    # Pair the "players" into matches
-                    for index in range(math.floor(numIndices / 2)):
-                        self.matches[rounds + 1].append(rotation[0 + index])
-                        self.matches[rounds + 1].append(rotation[numRounds - index])
+                    rotatorIndices =  range(2, numIndices)
+                    for rounds in range(numRounds):
+                        self.matches[rounds + 1] = []
+                        # Pair the "players" into matches
+                        for index in range(math.floor(numIndices / 2)):
+                            self.matches[rounds + 1].append(rotation[0 + index])
+                            self.matches[rounds + 1].append(rotation[numRounds - index])
 
-                    # rotate the players for next round
-                    # first index is anchor and is not rotated
-                    tempIndex = rotation[1]
-                    for index in rotatorIndices:
-                        rotation[index - 1] = rotation[index]
-                    rotation[numRounds] = tempIndex
-                self.currentRound = 1
-                self.__printRound(self.currentRound)
-                self.checkMatches()
+                        # rotate the players for next round
+                        # first index is anchor and is not rotated
+                        tempIndex = rotation[1]
+                        for index in rotatorIndices:
+                            rotation[index - 1] = rotation[index]
+                        rotation[numRounds] = tempIndex
+                    self.currentRound = 1
+                    self.__printRound(self.currentRound)
+                    self.checkMatches()
     
     # Start the draft
     def startDraft(self):
