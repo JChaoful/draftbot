@@ -190,7 +190,8 @@ class Draft:
                 outputMsg += ('\t' +  self.players[playerOneID].user.mention + ' vs ' +
                     self.players[playerTwoID].user.mention + '\n')
         asyncio.create_task(self.channel.send(outputMsg))
-            
+    
+    
     # Checks if two specified players are paired against each other in a given round
     # Implicitly checks if game has started, as self.matches is empty if game has not started
     def pairExists(self, playerOneID, playerTwoID, roundNumber):
@@ -403,7 +404,7 @@ class Draft:
                 outputMsg = 'Round 1 Pairings:\n'
                 for player in self.players.values():
                     asyncio.create_task(player.user.send('The draft is now finished. ' + 
-                    'Use !ydk or !mypool to get started on deckbuilding.'))
+                    'Use !myydk or !mypool to get started on deckbuilding.'))
                     
                 # Round-Robin matchmaking, "Circle Method" algorithm with index 0 as the anchor
                 # For n players:
