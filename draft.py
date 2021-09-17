@@ -415,6 +415,7 @@ class Draft:
                 self.packsOpened = True
                 if self.currentPick == PACK_SIZE:
                     # Set currentPick to allow player.hasPicked() to pass with a pack that is not PACK_SIZE
+                    
                     self.currentPick = PACK_SIZE - len(self.staples) + 1
                     self.openStaplePack()
                 else:

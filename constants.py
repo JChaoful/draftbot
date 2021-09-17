@@ -1,6 +1,6 @@
 #------------DRAFT SPECIFICATIONS------------
 # 0 < PACK_SIZE <=15
-PACK_SIZE = 3
+PACK_SIZE = 1
 # If you do not want to use staples, set STAPLES_CUB to None
 # 0 < NUM_STAPLES <= 15
 NUM_STAPLES = 8
@@ -17,13 +17,13 @@ CHIPS_PER_LOSS = 3
 # Set to None if no staples are to be used
 # Make sure to update NUM_STAPLES in draft.py according
 # to number of staples in provided file
-#STAPLES_CUB = 'staples.cub'
-STAPLES_CUB = None
+STAPLES_CUB = 'staples.cub'
+#STAPLES_CUB = None
 
 # Draft creation limitations
 # 1 < NUM_PLAYERS
-NUM_PLAYERS = 2
-ALLOWED_CHANNELS = ['draft', 'general']
+NUM_PLAYERS = 4
+ALLOWED_CHANNELS = ['draft']
 MAX_DRAFTS = 4
 
 # 15 < IGNORED_REACTION. Reactions are mapped from 1-15 based
@@ -80,13 +80,13 @@ COMMANDS = {
             'basicDef' : 'Creates a draft from a user-specified .cub file with a user-specified name',
             'complexDef' : ('[Usage: !draftcreate cubefile draftname]\n' + ' ' * 14 + 
                             'Creates a draft in the message channel from cubefile.cub named draftname, up to ' +
-                            str(MAX_DRAFTS))
+                            str(MAX_DRAFTS) + '. Draftname cannot contain spaces')
         },
         'draftjoin' : {
             'basicDef' : 'Join user-specified draft in the message channel if it exists',
             'complexDef' : ('[Usage: !draftjoin draftname (in channel of draft)]\n' + ' ' * 13 +
                             'Joins draft draftname in the message channel, trying to fire the cube if the draft now has ' +
-                            str(NUM_PLAYERS) + ' players')
+                            str(NUM_PLAYERS) + ' players. Draftname is case-insensitive.')
         },
         'draftleave' : {
             'basicDef' : 'Leaves any draft in the message channel the user is in',
@@ -148,12 +148,12 @@ ADMIN_COMMANDS = {
         'draftstart' : {
             'basicDef' : 'Manually fires user-specified draft in the message channel if it exists',
             'complexDef' : ('[Usage: !draftstart draftname]\n' + ' ' * 14 +
-                            'Manually fires draftname in the message channel if it exists')
+                            'Manually fires draftname in the message channel if it exists. Draftname is case-insensitive.')
         },
         'draftend' : {
             'basicDef' : 'Manually concludes user-specified draft in the message channel if it exists',
             'complexDef' : ('[Usage: !draftend draftname]\n' + ' ' * 12 +
-                            'Manually concludes and deletes draftname in the message channel if it exists')
+                            'Manually concludes and deletes draftname in the message channel if it exists. Draftname is case-insensitive')
         },
         'draftkick' : {
             'basicDef' : 'Kick player from drafts in the message channel they\'re in',

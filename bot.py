@@ -83,6 +83,8 @@ def __import_staples():
             for card in cardDict:
                 CardList.append(cardInfo.cardJsonToCardInfo(card))
         staples[cub] = CardList
+        if len(staples[cub]) != NUM_STAPLES:
+            print('WARNING: ' + 'staples/' + str(cub) + 'does not contain ' + str(NUM_STAPLES) + ' cards')
 
 # Dictionaries mapping cards to certain characteristics
 def __createAttributeDictionary(cardList):
@@ -233,6 +235,7 @@ async def on_message(message):
             await msgChannel.send('Command should be used in the form \"!gamehelp *filter\", ' +
                 'where filter can be a command, a command class(' + str(COMMAND_CLASSES) + '), or a guide(' +
                 str(COMMAND_GUIDES) + ')')
+            return
         
         if len(splitMsg) == 2:
             argument = splitMsg[1]
@@ -288,7 +291,7 @@ async def on_message(message):
             outputMsg = ('```css\n[DRAFTBOT MANUAL]\n' +
                         'Can view more detailed information about subset of commands with \"!gamehelp commandclass\", ' +
                         'where commandclass\n\tis one of the following: ' + str(COMMAND_CLASSES) + '\n\n' +
-                        'Can view more detailed information about a specific command with \"gamehelp command\" ' + 
+                        'Can view more detailed information about a specific command with \"!gamehelp command\" ' + 
                         '(ex. \"!gamehelp gamehelp\")\n\n' + 'Can view guides with \"!gamehelp guide\". Current guides: ' +
                         str(COMMAND_GUIDES) + '```\n')
                         
