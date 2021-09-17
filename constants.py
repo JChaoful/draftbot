@@ -31,15 +31,23 @@ MAX_DRAFTS = 4
 # values
 IGNORED_REACTION = 100
 
-reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '0️⃣', '🇦', '🇧','🇨','🇩','🇪']
+REACTIONS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '0️⃣', '🇦', '🇧','🇨','🇩','🇪']
+
+# Loot table for rewards
+LOOT_TABLE = ['Thousand-Eyes Restrict', 'Rescue Cat',
+            'Forbidden Lance', 'Dimensional Prison', 'Caius the Shadow Monarch', 'Magikey Beast - Ansyalabolas',
+            'X-Saber Airbellum', 'Giant Rex', 'Sinister Serpent', 'Night Assailant',
+            'Shaddoll Squamata', 'Horn of the Phantom Beast', 'Evil Dragon Ananta', 'Koa\'ki Meiru Drago', 'Knight of the Red Lotus',
+            'Exiled Force','Nobleman of Crossout','Advanced Ritual Art','Gaia Plate the Earth Giant','Abyss Soldier']
+            
 
 
 #------------Card Characteristics------------
-attributes = ['DARK', 'DIVINE', 'EARTH', 'FIRE', 'LIGHT', 'WATER', 'WIND'] 
-levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-monsterTypes = ['Aqua', 'Beast', 'Beast-Warrior', 'Cyberse', 'Dinosaur', 'Divine-Beast', 'Dragon', 'Fairy', 'Fiend', 'Fish', 'Insect',
+ATTRIBUTES = ['DARK', 'DIVINE', 'EARTH', 'FIRE', 'LIGHT', 'WATER', 'WIND'] 
+LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+MONSTER_TYPES = ['Aqua', 'Beast', 'Beast-Warrior', 'Cyberse', 'Dinosaur', 'Divine-Beast', 'Dragon', 'Fairy', 'Fiend', 'Fish', 'Insect',
 'Machine', 'Plant', 'Psychic', 'Pyro', 'Reptile', 'Rock', 'Sea Serpent', 'Spellcaster', 'Thunder', 'Warrior', 'Winged Beast', 'Wyrm', 'Zombie']
-cardTypes = ['Normal Monster', 'Gemini Monster', 'Effect Monster', 'Tuner Monster', 'Spell', 'Trap', 'Fusion','Synchro', 'XYZ']
+CARD_TYPES = ['Normal Monster', 'Gemini Monster', 'Effect Monster', 'Tuner Monster', 'Spell', 'Trap', 'Fusion','Synchro', 'XYZ']
 
 #------------!Help Constants------------
 COMMAND_LIST = {
@@ -61,7 +69,7 @@ COMMAND_LIST = {
     'matchmanual' : 'match',
     'matchnoshow' : 'match'}
 
-COMMAND_GUIDES = ['rules', 'startguide', 'cubeguide']
+COMMAND_GUIDES = ['rules', 'startguide', 'cubeguide', 'loot']
 
 ADMIN_COMMAND_GUIDES = ['adminguide']
 
@@ -240,3 +248,8 @@ ADMIN_GUIDE = ('```css\n[ADMINS GUIDE]```\n' +
                 '\"!matchmanual\" and \"!matchundo\" to set a draft to any game in any round for a given draft.\n'+
                 '\t3)\"!showpools\" main use is to manually deck check players suspected of cheating with their draft pools')
                 
+LOOT_GUIDE = ('```css\n[LOOT GUIDE]```\n' +
+                'For every win, you get one spin at this loot table. The lowest spin determines your loot.\n')
+for i in range(len(LOOT_TABLE)):
+    LOOT_GUIDE += '\n\t' + str(i + 1) + ': ' + LOOT_TABLE[i]               
+LOOT_GUIDE += '\n\t' + str(len(LOOT_TABLE) + 1) + '+: 5 dust' 

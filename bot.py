@@ -36,12 +36,13 @@ RULES_GUIDE = constants.RULES_GUIDE
 START_GUIDE = constants.START_GUIDE
 CUBE_GUIDE = constants.CUBE_GUIDE
 ADMIN_GUIDE = constants.ADMIN_GUIDE
+LOOT_GUIDE = constants.LOOT_GUIDE
 
 # Card charcteristics
-attributes = constants.attributes
-levels = constants.levels
-monsterTypes = constants.monsterTypes
-cardTypes = constants.cardTypes
+attributes = constants.ATTRIBUTES
+levels = constants.LEVELS
+monsterTypes = constants.MONSTER_TYPES
+cardTypes = constants.CARD_TYPES
 
 # Maps: channel names->{draft names->drafts}
 drafts = {}
@@ -261,12 +262,15 @@ async def on_message(message):
                         await msgChannel.send('That command can only be viewed by admins!')
             elif argument in COMMAND_GUIDES:
                 # Print out requested user guide
+                # Maybe use dictionary to reduce ifs
                 if argument == 'rules':
                     await author.send(RULES_GUIDE)
                 elif argument == 'startguide':
                     await author.send(START_GUIDE)
                 elif argument == 'cubeguide':
                     await author.send(CUBE_GUIDE)
+                elif argument == 'loot':
+                    await author.send(LOOT_GUIDE)
                 await msgChannel.send('I sent you the requested gamehelp user guide!')
             elif argument in ADMIN_COMMAND_GUIDES:
                 # Print out requested admin guide if user is admin

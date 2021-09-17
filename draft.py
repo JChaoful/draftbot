@@ -17,7 +17,10 @@ NUM_PLAYERS = constants.NUM_PLAYERS
 CHIPS_PER_WIN = constants.CHIPS_PER_WIN
 CHIPS_PER_LOSS = constants.CHIPS_PER_LOSS
 
-reactions = constants.reactions
+# Loot Table for card rewards
+LOOT_TABLE = constants.LOOT_TABLE
+
+reactions = constants.REACTIONS
 
 #Starting with a list that will hold pick data
 pickdata = [['Name', 'Pick', 'User', 'Cube']]
@@ -191,6 +194,12 @@ class Draft:
                     self.players[playerTwoID].user.mention + '\n')
         asyncio.create_task(self.channel.send(outputMsg))
     
+    # Returns the minimum roll from random numRolls rolls (from 0 to 47)
+    def __roll(self, numRolls):
+        minRoll = 48
+        for i in range(numRolls):
+            minRoll = min(random.randint(0, 47), minRoll)
+        return minRoll
     
     # Checks if two specified players are paired against each other in a given round
     # Implicitly checks if game has started, as self.matches is empty if game has not started
@@ -272,7 +281,6 @@ class Draft:
                 self.checkMatches()
             else:
                 return False
-
             return True
         except (KeyError, ValueError) as e:
             return e
@@ -292,8 +300,14 @@ class Draft:
                 for player in self.players.values():
                     chipsEarned = (player.matchesWon * CHIPS_PER_WIN) + (player.matchesLost * CHIPS_PER_LOSS)
                     outputMsg += ('\t' + player.user.name + ': ' + str(player.matchesWon) +
-                        '-' + str(player.matchesLost) + ' = ' + str(chipsEarned) + ' chips\n')
-                # Award players rewards
+                        '-' + str(player.matchesLost) + ' = ' + str(chipsEarned) + ' chips')
+                    if player.matchesWon > 0:
+                        loot = __roll(player.matchesWon)
+                        if loot < 20:
+                            outputMsg += ' and ' + LOOT_TABLE[loot]
+                        else:
+                            outputMsg += ' and 5 dust'
+                    outputMsg += '\n'    
                 outputMsg += ('Make sure one of the players screenshots this message and posts ' +
                     'in #mod-help so everyone gets their rewards!')
                 asyncio.create_task(self.channel.send(outputMsg))
