@@ -24,16 +24,24 @@ cardList = read_card_list(sys.argv[2])
 
 #These are what we're gonna be exporting
 exportCards = []
-unidentifiedCards = []
+unidentifiedLines = []
 
 # Tracks rarity of cards if specified
 rarity = None
+validRarities = ['COMMON', 'RARE', 'SUPER', 'ULTRA', 'SECRET']
+
+# Stores printouts of unidentified lines
+errorMsg = '\n\n'
+
 #heart of it
 for line in cardList:
     # If a line is found that starts and end with dashes, interpret the line
     # as a rarity to start categorizing cards into
     if line.startswith('-') and line.endswith('-'):
         rarity = line.lstrip('-').rstrip('-')
+        if (rarity not in validRarities):
+            errorMsg += 'not a valid rarity:' + rarity + '\n'
+            unidentifiedLines.append(line)
         continue
     # Otherwise, line is a card
     else:
@@ -43,8 +51,8 @@ for line in cardList:
         
         # If card name could not be found, list it as unidentified
         if not match:
-            print('Could not find card ' + line.strip() + '. Please check spelling.')
-            unidentifiedCards.append(line)
+            errorMsg += 'Could not find card ' + line.strip() + '. Please check spelling.\n'
+            unidentifiedLines.append(line)
         # If card name is found, store it as a matched card (alongside user-specified alt-art and alt card ids)
         else:    
             # NOTE: match could have multiple elements. We only ever expect it to have one.
@@ -65,8 +73,8 @@ for line in cardList:
                 cardId = matchedCard['id']
             # Malformed card
             else:
-                print('Could not find card ' + line.strip() + '. Malformatted input line.')
-                unidentifiedCards.append("Malformatted line => " + line)
+                errorMsg += 'Could not find card ' + line.strip() + '. Malformatted input line.\n'
+                unidentifiedLines.append("Malformatted line => " + line)
                 continue        
             # Print out the card that was found and successfully interpreted
             print('Name: %s | Id: %s | Type: %s | Image Link: %s \n' % (matchedCard['name'], cardId, matchedCard['type'], imageUrl))
@@ -78,37 +86,42 @@ for line in cardList:
             # Store the rarity of the card if necessary
             if rarity != None:
                 matchedCard['rarity'] = rarity
-            exportCards.append(matchedCard)
+            exportCards.append(matchedCard)        
 
-# The cardList was a set, and should be stored as a .set
-if rarity != None and path.exists('list.set'):
-    os.remove('list.set')
-    setFile = open("list.set", "w")
-    with setFile as export_list:
-        json.dump(exportCards, export_list)
-    setFile.close()
-# The cardList was a cube, and should be stored as a .cub
-else: 
-    if(path.exists('list.cub')):
-        os.remove('list.cub')
-    cubeFile = open("list.cub", "w")
-    with cubeFile as export_list:
-        json.dump(Cards, export_list)
-    cubeFile.close()
-        
-
-# Generate .txt file of missing cards if necessary
+# Remove files that would be generated.
+# The main directoy should only contain "essential" bare-bones file everytime cubemaker.py is called
 if(path.exists('missed_cards.txt')):
     os.remove('missed_cards.txt')
-
-#dump any and all unfound card names to a new text file
-if(unidentifiedCards):
+if path.exists('list.set'):
+    os.remove('list.set')
+if path.exists('list.cub'):
+    os.remove('list.cub')
+    
+# Dump all unreadable lines to a new text file
+if(unidentifiedLines):
     missedCardsFile = open("missed_cards.txt", 'w')
     with missedCardsFile as whoops:
-        for missedCard in unidentifiedCards:
+        for missedCard in unidentifiedLines:
             whoops.write(missedCard + '\n')
     missedCardsFile.close()
+
+# Only generate .cub or .set if all cards/rarities listed are valid
+else:
+    # The cardList was a set, and should be stored as a .set
+    if rarity != None:
+        setFile = open("list.set", "w")
+        with setFile as export_list:
+            json.dump(exportCards, export_list)
+        setFile.close()
+    # The cardList was a cube, and should be stored as a .cub
+    else: 
+        cubeFile = open("list.cub", "w")
+        with cubeFile as export_list:
+            json.dump(exportCards, export_list)
+        cubeFile.close()
 
 #Download all card images
 import imagemanager
 imagemanager.cache_all_images()
+
+print(errorMsg)
