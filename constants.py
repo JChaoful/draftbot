@@ -242,10 +242,11 @@ ADMIN_GUIDE = ('```css\n[ADMINS GUIDE]```\n' +
                 '\t3)\"!showpools\" main use is to manually deck check players suspected of cheating with their draft pools')
                 
 LOOT_GUIDE = ('```css\n[LOOT GUIDE]```\n' +
-                'For every win, you get one spin at this loot table. The lowest spin determines your loot.\n')
+                '~~For every win, you get one spin at this loot table. The lowest spin determines your loot.\n')
 for i in range(len(LOOT_TABLE)):
     LOOT_GUIDE += '\n\t' + str(i + 1) + ': ' + LOOT_TABLE[i]               
 LOOT_GUIDE += '\n\t' + str(len(LOOT_TABLE) + 1) + '+: 5 dust' 
+LOOT_GUIDE += '~~'
 
 COMMAND_GUIDES = {
     'rules' : RULES_GUIDE,
