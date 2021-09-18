@@ -25,10 +25,7 @@ Configure the constants in constants.py per your draft specifications
 Run bot.py. All cube.cub files should be in "cubes/", and the staple.cub file, if you choose to use it, should be in "cubes/staples/". 
 
 ## TODO:
-* Add a message when a player is kicked.
 * test cubestats and mypool with fusions
-* warn against using !loss in #draft
 * try making cards picked through messages intead of reacts
-* make dictionary for argument->guides for !gamehelp
 * Add rarity-based packs
 * make showcubestats include spirit monsters
