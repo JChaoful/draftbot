@@ -1,0 +1,4 @@
+Update the following card IDs manually:
+	Dian Keto the Cure Master: 84257639
+	Monster Reborn: 83764718
+	Mystic Tomato: 83011277

@@ -1,6 +1,6 @@
 #------------DRAFT SPECIFICATIONS------------
 # 0 < PACK_SIZE <=15
-PACK_SIZE = 1
+PACK_SIZE = 3
 # If you do not want to use staples, set STAPLES_CUB to None
 # 0 < NUM_STAPLES <= 15
 NUM_STAPLES = 8
@@ -10,7 +10,7 @@ STAPLES_USED = 3
 NUM_PACKS = 1
 
 # Draft Rewards
-CHIPS_PER_WIN = 5
+CHIPS_PER_WIN = 6
 CHIPS_PER_LOSS = 3
 
 # If cube file is used, file must in /staples folder
@@ -22,7 +22,7 @@ STAPLES_CUB = 'staples.cub'
 
 # Draft creation limitations
 # 1 < NUM_PLAYERS
-NUM_PLAYERS = 4
+NUM_PLAYERS = 2
 ALLOWED_CHANNELS = ['draft']
 MAX_DRAFTS = 4
 
@@ -213,10 +213,10 @@ RULES_GUIDE = ('```css\n[RULES GUIDE]```\n' +
                 '\t1) \"forged 4 format\" rules, besides the 30-card decks\n' +
                 '\t2) \"forged 4 format\" rulings, as dictated in #rulings\n' +
                 '\t3) Best-of-1 games\n\n'+
-                'The entry fee is 50 dust. Players earn 5 chips per win and 3 chips per loss. Players who ' +
-                'play all their matches will also ' +
+                '~~The entry fee is 50 dust~~. Players earn ' + str(CHIPS_PER_WIN) + ' chips per win and ' + str(CHIPS_PER_LOSS) +
+                ' chips per loss. ~~Players who play all their matches will also ' +
                 ' recieve a drop from a loot table. More wins means a higher chance at better loot. ' +
-                'See \"gamehelp loot\" for more information.')
+                'See \"gamehelp loot\" for more information.~~')
                 
 START_GUIDE = ('```css\n[START GUIDE]```\n' +
                 'Welcome to Draft! Make sure to read the rules guide (\"!gamehelp rules\") before continuing to read this guide!\n\n' +

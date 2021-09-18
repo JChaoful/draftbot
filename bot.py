@@ -77,7 +77,7 @@ def __import_staples():
     for cub in os.listdir('staples'):
         CardList = []
         print('Staple list discovered. Importing.')
-        with open('staples/' + cub) as stapleFile:
+        with open('cubes/staples/' + cub) as stapleFile:
             cardDict = json.load(stapleFile)
             # Instantiate a new CardInfo object for each card in the list. Definitely could pull in more info from the JSON - there's a lot there.
             for card in cardDict:
@@ -621,7 +621,7 @@ async def on_message(message):
 
             for card in player.pool:
                 #print('card name = {0}, card type = {1}, card id = {2}'.format(card.name, card.cardType, card.id))
-                if ((card.cardType != ('Synchro Monster') or ('Synchro Tuner Monster')) and
+                if (card.cardType != (('Synchro Monster') or ('Synchro Tuner Monster')) and
                     (card.cardType != 'XYZ Monster') and
                     (card.cardType != 'Fusion Monster')):                
                     tempidpoolnoextra.append(card.id) #puts the ids of the main deck cards in a list
@@ -669,6 +669,7 @@ async def on_message(message):
             await msgChannel.send('Command should be used in form \"!matchloss @player\", ' +
                 'in the channel of the draft you want to report the loss from. ' + 
                 'Use \"!showdrafts\" to show current drafts.')
+            return
         player = message.mentions[0]
         
         if author.id == player.id:

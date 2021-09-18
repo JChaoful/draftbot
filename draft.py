@@ -310,9 +310,9 @@ class Draft:
                     if player.matchesWon > 0:
                         loot = self.__roll(player.matchesWon)
                         if loot < 20:
-                            outputMsg += ' and ' + LOOT_TABLE[loot]
+                            outputMsg += ' ~~and ' + LOOT_TABLE[loot] + '~~'
                         else:
-                            outputMsg += ' and 5 dust'
+                            outputMsg += ' ~~and 5 dust~~'
                     outputMsg += '\n'    
                 outputMsg += ('Make sure one of the players screenshots this message and posts ' +
                     'in #mod-help so everyone gets their rewards!')
