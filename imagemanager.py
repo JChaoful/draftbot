@@ -11,13 +11,14 @@ databasePath = "images.db"
 connection = sqlite3.connect(databasePath)
 cursor = connection.cursor()
 
-#Takes a few minutes to run depending on cube size.
+# Cache Images of cards that have not been processed before
+# Takes a few minutes to run depending on cube size.
 def cache_all_images():
     print('Cacheing all images...')
-    for cub in os.listdir('cubes'):
-        if cub.endswith('.cub'):
-            cubeJson = json.load(open('cubes/' + cub, "r"))
-            for card in cubeJson:
+    for cardPool in os.listdir('cardpools'):
+        if cardPool.endswith('.cub') or cardPool.endswith('.set'):
+            cardPoolJson = json.load(open('cardpools/' + cardPool, "r"))
+            for card in cardPoolJson:
                 print(card["name"])
                 result = cursor.execute('SELECT image FROM images WHERE id = ?', [card['id']]).fetchone()
                 if result is None:
