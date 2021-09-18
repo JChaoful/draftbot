@@ -136,6 +136,7 @@ class Timer:
                     if player.missedpicks == 3:
                         asyncio.create_task(player.user.send('Ran out of time. You have been kicked for missing 3 picks. Three strikes! you\'re out! https://tenor.com/view/strike-ponche-bateador-strike-out-swing-gif-15388719'))
                         asyncio.create_task(self.draft.channel.send('You\'re way too slow at picking.. Maybe these\'ll help?', file = discord.File(open(shadow, 'rb'))))
+                        asyncio.create_task(self.draft.channel.send('Player ' + player.user.name + ' has missed 3 picks and has been kicked!'))
                         self.draft.kick(player.user.id)
 
                     else:
