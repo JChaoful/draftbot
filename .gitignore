@@ -1,5 +1,7 @@
 .vscode
 list.cub
+list.set
+missedcards.txt
 Images.db
 __pycache__
 config.json
