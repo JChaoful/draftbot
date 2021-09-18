@@ -1,17 +1,15 @@
 #------------DRAFT SPECIFICATIONS------------
+# CONFIGURE THESE SETTINGS
+
+# 1 < NUM_PLAYERS
+PLAYERS_PER_DRAFT = 4
+ALLOWED_CHANNELS = ['draft']
+DRAFTS_PER_CHANNEL = 4
+
 # 0 < PACK_SIZE <=15
 PACK_SIZE = 15
-# If you do not want to use staples, set STAPLES_CUB to None
-# 0 < NUM_STAPLES <= 15
-NUM_STAPLES = 8
-# 0 < STAPLES_USED <= 15
-STAPLES_USED = 3
 # 0 < NUM_PACKS
 NUM_PACKS = 3
-
-# Draft Rewards
-CHIPS_PER_WIN = 6
-CHIPS_PER_LOSS = 3
 
 # If cube file is used, file must in /staples folder
 # Set to None if no staples are to be used
@@ -20,18 +18,18 @@ CHIPS_PER_LOSS = 3
 STAPLES_CUB = 'staples.cub'
 #STAPLES_CUB = None
 
-# Draft creation limitations
-# 1 < NUM_PLAYERS
-NUM_PLAYERS = 4
-ALLOWED_CHANNELS = ['draft']
-MAX_DRAFTS = 4
+# If you do not want to use staples, set STAPLES_CUB to None
+# 0 < NUM_STAPLES <= 15 (Should be equal to the number of staples in STAPLES_CUB)
+NUM_STAPLES = 8
+# 0 < STAPLES_USED <= 15 (The number of staples chosen per player from STAPLES_CUB)
+STAPLES_USED = 3
 
-# 15 < IGNORED_REACTION. Reactions are mapped from 1-15 based
-# on PACK_SIZE, so the ignored value must be greater than those
-# values
-IGNORED_REACTION = 100
 
-REACTIONS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '0️⃣', '🇦', '🇧','🇨','🇩','🇪']
+# DO NOT CONFIGURE SETTINGS BELOW
+
+# Draft Rewards
+CHIPS_PER_WIN = 6
+CHIPS_PER_LOSS = 3
 
 # Loot table for rewards
 LOOT_TABLE = ['Thousand-Eyes Restrict', 'Rescue Cat',
@@ -39,8 +37,6 @@ LOOT_TABLE = ['Thousand-Eyes Restrict', 'Rescue Cat',
             'X-Saber Airbellum', 'Giant Rex', 'Sinister Serpent', 'Night Assailant',
             'Shaddoll Squamata', 'Horn of the Phantom Beast', 'Evil Dragon Ananta', 'Koa\'ki Meiru Drago', 'Knight of the Red Lotus',
             'Exiled Force','Nobleman of Crossout','Advanced Ritual Art','Gaia Plate the Earth Giant','Abyss Soldier']
-            
-
 
 #------------Card Characteristics------------
 ATTRIBUTES = ['DARK', 'DIVINE', 'EARTH', 'FIRE', 'LIGHT', 'WATER', 'WIND'] 
@@ -80,13 +76,13 @@ COMMANDS = {
             'basicDef' : 'Creates a draft from a user-specified .cub file with a user-specified name',
             'complexDef' : ('[Usage: !draftcreate cubefile draftname]\n' + ' ' * 14 + 
                             'Creates a draft in the message channel from cubefile.cub named draftname, up to ' +
-                            str(MAX_DRAFTS) + '. Draftname cannot contain spaces')
+                            str(DRAFTS_PER_CHANNEL) + '. Draftname cannot contain spaces')
         },
         'draftjoin' : {
             'basicDef' : 'Join user-specified draft in the message channel if it exists',
             'complexDef' : ('[Usage: !draftjoin draftname (in channel of draft)]\n' + ' ' * 13 +
                             'Joins draft draftname in the message channel, trying to fire the cube if the draft now has ' +
-                            str(NUM_PLAYERS) + ' players. Draftname is case-insensitive.')
+                            str(PLAYERS_PER_DRAFT) + ' players. Draftname is case-insensitive.')
         },
         'draftleave' : {
             'basicDef' : 'Leaves any draft in the message channel the user is in',
@@ -199,7 +195,7 @@ ADMIN_COMMANDS = {
 }
 
 RULES_GUIDE = ('```css\n[RULES GUIDE]```\n' +
-                'Each of the ' + str(NUM_PLAYERS) + ' players gets ' + str(NUM_PACKS) + ' ' + str(PACK_SIZE) + 
+                'Each of the ' + str(PLAYERS_PER_DRAFT) + ' players gets ' + str(NUM_PACKS) + ' ' + str(PACK_SIZE) + 
                 '-card pack(s) from a pool of ~160 cards (that has duplicates of some cards).\n' +
                 '\t1) Each player opens 1 of their packs\n' + '\t2) Each player takes 1 card from their pack\n' +
                 '\t3) The players pass the pack between themselves in a circle, taking turns picking 1 card from ' +

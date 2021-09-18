@@ -15,15 +15,18 @@ client = discord.Client()
 # Draft specifications
 PACK_SIZE = constants.PACK_SIZE
 NUM_PACKS = constants.NUM_PACKS
-NUM_PLAYERS = constants.NUM_PLAYERS
+NUM_PLAYERS = constants.PLAYERS_PER_DRAFT
 
 STAPLES_CUB = constants.STAPLES_CUB
 
 # Draft creation limitations
 ALLOWED_CHANNELS = constants.ALLOWED_CHANNELS
-MAX_DRAFTS = constants.MAX_DRAFTS
+MAX_DRAFTS = constants.DRAFTS_PER_CHANNEL
 
-IGNORED_REACTION = constants.IGNORED_REACTION
+# 15 < IGNORED_REACTION. Reactions are mapped from 1-15 based
+# on PACK_SIZE, so the ignored value must be greater than those
+# values
+IGNORED_REACTION = 100
 
 # Command information
 COMMAND_LIST = constants.COMMAND_LIST

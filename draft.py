@@ -13,14 +13,14 @@ PACK_SIZE = constants.PACK_SIZE
 NUM_STAPLES = constants.NUM_STAPLES
 STAPLES_USED = constants.STAPLES_USED
 NUM_PACKS = constants.NUM_PACKS
-NUM_PLAYERS = constants.NUM_PLAYERS
+NUM_PLAYERS = constants.PLAYERS_PER_DRAFT
 CHIPS_PER_WIN = constants.CHIPS_PER_WIN
 CHIPS_PER_LOSS = constants.CHIPS_PER_LOSS
 
 # Loot Table for card rewards
 LOOT_TABLE = constants.LOOT_TABLE
 
-reactions = constants.REACTIONS
+reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '0️⃣', '🇦', '🇧','🇨','🇩','🇪']
 
 #Starting with a list that will hold pick data
 pickdata = [['Name', 'Pick', 'User', 'Cube']]
