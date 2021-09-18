@@ -1,13 +1,13 @@
 #------------DRAFT SPECIFICATIONS------------
 # 0 < PACK_SIZE <=15
-PACK_SIZE = 3
+PACK_SIZE = 15
 # If you do not want to use staples, set STAPLES_CUB to None
 # 0 < NUM_STAPLES <= 15
 NUM_STAPLES = 8
 # 0 < STAPLES_USED <= 15
 STAPLES_USED = 3
 # 0 < NUM_PACKS
-NUM_PACKS = 1
+NUM_PACKS = 3
 
 # Draft Rewards
 CHIPS_PER_WIN = 6
@@ -22,7 +22,7 @@ STAPLES_CUB = 'staples.cub'
 
 # Draft creation limitations
 # 1 < NUM_PLAYERS
-NUM_PLAYERS = 2
+NUM_PLAYERS = 4
 ALLOWED_CHANNELS = ['draft']
 MAX_DRAFTS = 4
 

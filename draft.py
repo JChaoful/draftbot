@@ -113,7 +113,7 @@ class Timer:
             numPicks = self.draft.currentPick
             if numPicks < 0:
               numPicks = 6
-            newLength = -206.974 * math.log10(0.0476965 * (numPicks + 4))
+            newLength = -206.974 * math.log10(0.0476965 * (numPicks + 3))
             self.length = round(newLength)
             #A little bit of psych here. Tell them there is shorter left to pick than there really is.
             await asyncio.sleep(self.length - 12)
