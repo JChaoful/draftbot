@@ -46,6 +46,8 @@ cardTypes = constants.CARD_TYPES
 drafts = {}
 # Maps: cube filenames->cards (cardInfo objects)
 cubes = {}
+# Maps: set filenames->{rarities->cards (cardInfo objects)}
+sets = {}
 # Maps: staples filenames->cards (cardInfo objects)
 staples = {}
 # Maps: id of users current playing ->{draftInformation}
