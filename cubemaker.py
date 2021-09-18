@@ -4,17 +4,21 @@ import os
 import os.path
 from os import path
 
-#takes a filepath expected to be newline delimited list of desired cards
+# Takes a filepath expected to be newline delimited list of desired cards
 def read_cube_list(filepath):
-    return open(filepath).read().splitlines()
+    f = open(filepath)
+    cube_list = f.read().splitlines()
+    f.close()
+    return cube_list
 
-#takes a filepath expected to be JSON file of yugioh cards and reads them to a dictionary
+# Takes a filepath expected to be JSON file of "all yugioh cards" and reads them to a dictionary
 def read_card_list(filepath):
     with open(filepath, "r") as f:
         cardDict = json.load(f)
+        f.close()
         return cardDict["data"]
 
-#I don't care to be safer than this. If it blows up, that's on you.
+# Read user arguments and processes files as dictionaries/lists
 allCards = read_card_list(sys.argv[1])
 cubeList = read_cube_list(sys.argv[2])
 
@@ -86,3 +90,5 @@ cubeFile.close()
 #Download all card images
 import imagemanager
 imagemanager.cache_all_images()
+
+cubeFile.close()
