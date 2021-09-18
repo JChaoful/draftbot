@@ -65,9 +65,6 @@ COMMAND_LIST = {
     'matchmanual' : 'match',
     'matchnoshow' : 'match'}
 
-COMMAND_GUIDES = ['rules', 'startguide', 'cubeguide', 'loot']
-
-ADMIN_COMMAND_GUIDES = ['adminguide']
 
 COMMANDS = {
     'draft' : {
@@ -249,3 +246,12 @@ LOOT_GUIDE = ('```css\n[LOOT GUIDE]```\n' +
 for i in range(len(LOOT_TABLE)):
     LOOT_GUIDE += '\n\t' + str(i + 1) + ': ' + LOOT_TABLE[i]               
 LOOT_GUIDE += '\n\t' + str(len(LOOT_TABLE) + 1) + '+: 5 dust' 
+
+COMMAND_GUIDES = {
+    'rules' : RULES_GUIDE,
+    'startguide' : START_GUIDE,
+    'cubeguide' : CUBE_GUIDE,
+    'loot' : LOOT_GUIDE}
+
+ADMIN_COMMAND_GUIDES = {
+'adminguide' : ADMIN_GUIDE}

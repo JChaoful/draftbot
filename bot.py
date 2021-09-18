@@ -35,11 +35,6 @@ ADMIN_COMMANDS = constants.ADMIN_COMMANDS
 COMMAND_CLASSES = list(COMMANDS.keys())
 COMMAND_GUIDES = constants.COMMAND_GUIDES
 ADMIN_COMMAND_GUIDES = constants.ADMIN_COMMAND_GUIDES
-RULES_GUIDE = constants.RULES_GUIDE
-START_GUIDE = constants.START_GUIDE
-CUBE_GUIDE = constants.CUBE_GUIDE
-ADMIN_GUIDE = constants.ADMIN_GUIDE
-LOOT_GUIDE = constants.LOOT_GUIDE
 
 # Card charcteristics
 attributes = constants.ATTRIBUTES
@@ -270,23 +265,15 @@ async def on_message(message):
                         await author.send('__**' + argument + '**__ - ' + complexDef + '\n')
                     else:
                         await msgChannel.send('That command can only be viewed by admins!')
-            elif argument in COMMAND_GUIDES:
+            elif argument in COMMAND_GUIDES.keys():
                 # Print out requested user guide
                 # Maybe use dictionary to reduce ifs
-                if argument == 'rules':
-                    await author.send(RULES_GUIDE)
-                elif argument == 'startguide':
-                    await author.send(START_GUIDE)
-                elif argument == 'cubeguide':
-                    await author.send(CUBE_GUIDE)
-                elif argument == 'loot':
-                    await author.send(LOOT_GUIDE)
+                await author.send(COMMAND_GUIDES[argument])
                 await msgChannel.send('I sent you the requested gamehelp user guide!')
-            elif argument in ADMIN_COMMAND_GUIDES:
+            elif argument in ADMIN_COMMAND_GUIDES.keys():
                 # Print out requested admin guide if user is admin
                 if 'Admin' in str(author.roles) or 'Moderator' in str(author.roles):
-                    if argument == 'adminguide':
-                        await author.send(ADMIN_GUIDE)
+                    await author.send(ADMIN_COMMAND_GUIDES[argument])
                     await msgChannel.send('I sent you the requested gamehelp admin guide!')
                 else:
                     await msgChannel.send('That guide can only be viewed by admins!')
@@ -1151,7 +1138,21 @@ async def on_message(message):
     #         #await author.send(PickLog) 
     #         for thing in PickLog:
     #             logtosend+='%s\n' % thing
-    #         asyncio.create_task(author.send(file=discord.File(fp=StringIO(logtosend),filename='PickLog.csv')))    
+    #         asyncio.create_task(author.send(file=discord.File(fp=StringIO(logtosend),filename='PickLog.csv'))) 
+
+    # Anti Merchbot Commands
+    if '!join' == splitMsg[0] and message.channel.name in ALLOWED_CHANNELS:
+        await msgChannel.send('We do \"!draftjoin\" around these parts, pardner. Check \"!gamehelp\"')
+        return
+    if '!leave' == splitMsg[0] and message.channel.name in ALLOWED_CHANNELS:
+        await msgChannel.send('We do \"!draftleave\" around these parts, partner. Check \"!gamehelp\"')
+        return
+    if '!q' == splitMsg[0] and message.channel.name in ALLOWED_CHANNELS:
+        await msgChannel.send('We do \"!draftshow\" around these parts, gardner. Check \"!gamehelp\"')
+        return
+    if '!loss' == splitMsg[0] and message.channel.name in ALLOWED_CHANNELS:
+        await msgChannel.send('We do \"!matchloss\" around these parts, bartner. \"!undo\" that loss quickly, and check \"!gamehelp\"')
+        return
 
 # When bot successfully connects to bot, print all servers it will connect to
 @client.event
