@@ -69,15 +69,19 @@ if(path.exists("list.cub")):
 if(path.exists("missed_cards.txt")):
     os.remove('missed_cards.txt')
 
-#dump the now defined cube list to a new JSON file
-with open("list.cub", "w") as export_list:
+#dump the now defined cube list to a new .cub file
+cubeFile = open("list.cub", "w")
+with cubeFile as export_list:
     json.dump(cubeCards, export_list)
 
 #dump any and all unfound card names to a new text file
 if(unidentifiedCards):
-    with open("missed_cards.txt", 'w') as whoops:
+    missedCardsFile = open("missed_cards.txt", 'w')
+    with missedCardsFile as whoops:
         for missedCard in unidentifiedCards:
             whoops.write(missedCard + '\n')
+    missedCardsFile.close()
+cubeFile.close()
 
 #Download all card images
 import imagemanager

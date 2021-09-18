@@ -62,29 +62,31 @@ currentPlayers = {}
 def __import_cubes():
     global cubes
     for cub in os.listdir('cubes'):
-        CardList = []
-        print('Cube list discovered. Importing.')
-        with open('cubes/' + cub) as cubeFile:
-            cardDict = json.load(cubeFile)
-            # Instantiate a new CardInfo object for each card in the list. Definitely could pull in more info from the JSON - there's a lot there.
-            for card in cardDict:
-                CardList.append(cardInfo.cardJsonToCardInfo(card))
-        cubes[cub] = CardList
+        if cub.endswith('.cub'):
+            CardList = []
+            print('Cube list discovered. Importing.')
+            with open('cubes/' + cub) as cubeFile:
+                cardDict = json.load(cubeFile)
+                # Instantiate a new CardInfo object for each card in the list. Definitely could pull in more info from the JSON - there's a lot there.
+                for card in cardDict:
+                    CardList.append(cardInfo.cardJsonToCardInfo(card))
+            cubes[cub] = CardList
 
 # Import and map staple files to their card pools.
 def __import_staples():
     global staples
-    for cub in os.listdir('staples'):
-        CardList = []
-        print('Staple list discovered. Importing.')
-        with open('cubes/staples/' + cub) as stapleFile:
-            cardDict = json.load(stapleFile)
-            # Instantiate a new CardInfo object for each card in the list. Definitely could pull in more info from the JSON - there's a lot there.
-            for card in cardDict:
-                CardList.append(cardInfo.cardJsonToCardInfo(card))
-        staples[cub] = CardList
-        if len(staples[cub]) != NUM_STAPLES:
-            print('WARNING: ' + 'staples/' + str(cub) + 'does not contain ' + str(NUM_STAPLES) + ' cards')
+    for cub in os.listdir('cubes/staples'):
+        if cub.endswith('.cub'):
+            CardList = []
+            print('Staple list discovered. Importing.')
+            with open('cubes/staples/' + cub) as stapleFile:
+                cardDict = json.load(stapleFile)
+                # Instantiate a new CardInfo object for each card in the list. Definitely could pull in more info from the JSON - there's a lot there.
+                for card in cardDict:
+                    CardList.append(cardInfo.cardJsonToCardInfo(card))
+            staples[cub] = CardList
+            if len(staples[cub]) != NUM_STAPLES:
+                raise Exception('staples/' + str(cub) + 'does not contain ' + str(NUM_STAPLES) + ' cards')
 
 # Dictionaries mapping cards to certain characteristics
 def __createAttributeDictionary(cardList):
