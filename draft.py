@@ -9,10 +9,10 @@ import constants
 
 
 # Draft specifications
+NUM_PACKS = constants.NUM_PACKS
 PACK_SIZE = constants.PACK_SIZE
 NUM_STAPLES = constants.NUM_STAPLES
 STAPLES_USED = constants.STAPLES_USED
-NUM_PACKS = constants.NUM_PACKS
 NUM_PLAYERS = constants.PLAYERS_PER_DRAFT
 CHIPS_PER_WIN = constants.CHIPS_PER_WIN
 CHIPS_PER_LOSS = constants.CHIPS_PER_LOSS
@@ -60,7 +60,7 @@ class Player:
         return self.user
 
     def hasPicked(self):
-        return not (len(self.pack) + self.draft.currentPick == PACK_SIZE + 1)
+        return not (len(self.pack) + self.draft.currentPick == self.draft.packSize + 1)
 
     def pick(self, cardIndex):
         #Checking if the card is in the pack.
@@ -145,22 +145,37 @@ class Timer:
 
 class Draft:
     # name: The name of the draft
-    # cube: The cube the pool was created from
-    # pool: The cards remaining to be picked from
+    # cardPool: The cardPool the pool was created from
+    # pool: The cards remaining to be picked from. Sets do not have pools
+    # numPacks: number of packs to open
+    # packSize: mumber of cards in each pack
+    # mode: whether cardPool is set or cube
     # players: The players in the draft. Player class.
     # channel: The channel the draft was started from
     # timer: The timer tracking the picks. Reassign every pick.
     # currentPick: How many cards have been picked from the current pack. -1
     #   indicates draft has not started
     # currentPack: How many packs have been opened for drafting
-    # packsOpened: Whether all NUM_PACKS packs have been drafted
+    # packsOpened: Whether all numPacks packs have been drafted
     # currentRound: Which round of matches is currently being played
     # matches: Matches to be played, generated at end of draft
     #   Maps: round number->matches
-    def __init__(self, name, cube, channel, staples = None):
+    def __init__(self, name, cardPool, channel, staples = None):
         self.name = name
-        self.cube = cube[:]
-        self.pool = cube[:]
+        if isinstance(cardPool, dict):
+            self.cardPool = cardPool.copy()
+            self.mode = 'set'
+            self.numPacks = 5
+            self.packSize = 9
+        elif isinstance(cardPool, list):
+            self.cardPool = cardPool[:]
+            self.pool = cardPool[:]
+            self.mode = 'cube'
+            self.numPacks = NUM_PACKS
+            self.packSize = PACK_SIZE
+        else:
+            raise Exception('Attempted to initialize Draft object with cardPool that was not a list or dictionary')
+        
         if staples != None:
             self.staples = staples[:]
         else:
@@ -327,7 +342,7 @@ class Draft:
     def gameStarted(self):
         return self.currentRound != 0
     
-    # Assigns new packs of PACK_SIZE to each player
+    # Assigns new packs of packSize to each player
     def openPacks(self):
         self.currentPick = 1
         self.currentPack += 1
@@ -337,19 +352,81 @@ class Draft:
             reversedPlayers[playerID] = self.players[playerID]
         self.players.clear()
         self.players = reversedPlayers
+        
+        if self.mode == 'set':
+            numCommons = 0
+            numRares = 0
+            numSupers = 0
+            numUltras = 0
+            numSecrets = 0
+            
+            if 'COMMON' in self.cardPool.keys():
+                numCommons = len(self.cardPool['COMMON'])
+            if 'RARE' in self.cardPool.keys():
+                numRares = len(self.cardPool['RARE'])
+            if 'SUPER' in self.cardPool.keys():
+                numSupers = len(self.cardPool['SUPER'])
+            if 'ULTRA' in self.cardPool.keys():
+                numUltras = len(self.cardPool['ULTRA'])
+            if 'SECRET' in self.cardPool.keys():
+                numSecrets = len(self.cardPool['SECRET'])
+            
+            
+            for player in self.players.values():
+                pack = []
+                # Randomly pick some number of commons
+                # Make sure duplicate commons aren't pulled
+                commonsPulled = []
+                if numCommons > 6:
+                    while len(commonsPulled) < 7:
+                        randomCommon = random.randrange(0, numCommons)
+                        if randomCommon not in commonsPulled:
+                            commonsPulled.append(randomCommon)
+                            pack.append(self.cardPool['COMMON'][randomCommon])
+                else:
+                    raise Exception('Attempted to draft commons from set with < 7 commons')
+                    
+                
+                # Randomly pick a rare
+                pack.append(self.cardPool['RARE'][random.randrange(0, numRares)])
+                
+                # Randomly pick a card from the pool of supers, ultras, and secrets
+                randomHolo = random.randrange(0, numSupers + numUltras + numSecrets)
+                
+                # If a super was pulled
+                if randomHolo < numSupers:
+                    superIndex = randomHolo
+                    holoCard = self.cardPool['SUPER'][superIndex]
+                # If an ultra was pulled
+                elif randomHolo < numSupers + numUltras:
+                    ultraIndex = randomHolo - numSupers
+                    holoCard = self.cardPool['ULTRA'][ultraIndex]
+                # If a secret was pulled
+                else:
+                    secretIndex = randomHolo - numSupers - numUltras
+                    holoCard = self.cardPool['SECRET'][secretIndex]
+                pack.append(holoCard)
+                
+                player.pack = pack
+                # Splice reactions into pack
+                packWithReactions = [a + ': ' + b.name for a, b in zip(reactions, pack)] 
+                asyncio.create_task(send_pack_message("Here's your #" + str(self.currentPack) +
+                    " pack! React to select a card. Happy drafting!\n"+str(packWithReactions), player, pack))
+        else:
+            FullList = random.sample(self.pool, len(self.players) * self.packSize)
+            self.pool = [q for q in self.pool if q not in FullList] # Removes the cards from the full card list
 
-        FullList = random.sample(self.pool, len(self.players)*PACK_SIZE)
-        self.pool = [q for q in self.pool if q not in FullList] # Removes the cards from the full card list
-
-        i = 0 # For pulling cards from the full list into packs
-        for player in self.players.values():
-            pack = sortPack(FullList[i:i+PACK_SIZE])
-            player.pack = pack #Holds the packs
-            i = i+PACK_SIZE
-            # Splices reactions into pack
-            packWithReactions = [a + ': ' + b.name for a, b in zip(reactions, pack)] 
-            asyncio.create_task(send_pack_message("Here's your #" + str(self.currentPack) +
-                " pack! React to select a card. Happy drafting!\n"+str(packWithReactions), player, pack))
+            # Tracks cards from full list already given to a player in a pack
+            i = 0
+            for player in self.players.values():
+                pack = sortPack(FullList[i:i+self.packSize])
+                player.pack = pack #Holds the packs
+                # Move onto the next pack of cards for the next player
+                i = i + self.packSize
+                # Splices reactions into pack
+                packWithReactions = [a + ': ' + b.name for a, b in zip(reactions, pack)] 
+                asyncio.create_task(send_pack_message("Here's your #" + str(self.currentPack) +
+                    " pack! React to select a card. Happy drafting!\n"+str(packWithReactions), player, pack))
 
     # Rotates existing packs among players
     def rotatePacks(self):
@@ -373,13 +450,10 @@ class Draft:
         # List of NUM_STAPLES staples to pick from
         stapleList = self.staples.copy()
         
-        i = 0 #For pulling cards from the full list into packs
-        
         #Give each player a new staple pack
         for player in self.players.values():
             pack = sortPack(stapleList[i:i+NUM_STAPLES])
             player.pack = pack #Holds the packs
-            # i = i+NUM_STAPLES
             # splices reactions into pack
             packWithReactions = [a + ': ' + b.name for a, b in zip(reactions, pack)] 
             asyncio.create_task(send_pack_message("Pick your staple (1 of 3)!\n" +
@@ -394,34 +468,33 @@ class Draft:
         for player in self.players.values():
             packWithReactions = [a + ': ' + b.name for a, b in zip(reactions, player.pack)] 
             asyncio.create_task(send_pack_message("Pick your staple (" +
-                str(self.currentPick - PACK_SIZE + len(self.staples)) +
+                str(self.currentPick - self.packSize + len(self.staples)) +
                 " of 3)!\n" + str(packWithReactions), player, player.pack))
-        if self.currentPick == (STAPLES_USED + PACK_SIZE - len(self.staples)):
+        if self.currentPick == (STAPLES_USED + self.packSize - len(self.staples)):
             self.currentPack += 1
     
     # Decides if its time to rotate or send a new pack yet.
     def checkPacks(self):
         # Checks if every player has picked.
         if len([player for player in self.players.values() if not player.hasPicked()]) == 0:
-            # If NUM_PACKS packs have not been opened for each player, rotate the packs among players if
+            # If numPacks packs have not been opened for each player, rotate the packs among players if
             # there are cards available. If not, open a new pack.
-            if (self.currentPack <= NUM_PACKS and self.currentPick < PACK_SIZE and
+            if (self.currentPack <= self.numPacks and self.currentPick < self.packSize and
                 not self.packsOpened):
                 self.rotatePacks()
-            elif self.currentPack < NUM_PACKS:
+            elif self.currentPack < self.numPacks:
                 self.openPacks()
-            # If NUM_PACKS have been opened and staples are allowed,
+            # If numPacks have been opened and staples are allowed,
             # have each player pick NUM_STAPLES cards from the staples pool.
-            elif self.currentPack == NUM_PACKS and self.staples != None:
+            elif self.currentPack == self.numPacks and self.staples != None and self.mode == 'cube':
                 self.packsOpened = True
-                if self.currentPick == PACK_SIZE:
-                    # Set currentPick to allow player.hasPicked() to pass with a pack that is not PACK_SIZE
-                    
-                    self.currentPick = PACK_SIZE - len(self.staples) + 1
+                if self.currentPick == self.packSize:
+                    # Set currentPick to allow player.hasPicked() to pass with a pack that is not packSize
+                    self.currentPick = self.packSize - len(self.staples) + 1
                     self.openStaplePack()
                 else:
                     self.updateStaplePack()
-            # If NUM_PACKS have been opened and NUM_STAPLES have been selected, draft has concluded.
+            # If numPacks have been opened and NUM_STAPLES have been selected, draft has concluded.
             else:
                 for player in self.players.values():
                     asyncio.create_task(player.user.send('The draft is now finished. ' + 

@@ -7,10 +7,10 @@ PLAYERS_PER_DRAFT = 4
 ALLOWED_CHANNELS = ['draft']
 DRAFTS_PER_CHANNEL = 4
 
-# 0 < PACK_SIZE <=15
-PACK_SIZE = 15
 # 0 < NUM_PACKS
 NUM_PACKS = 3
+# 0 < PACK_SIZE <=15
+PACK_SIZE = 15
 
 # If cube file is used, file must in /staples folder
 # Set to None if no staples are to be used
@@ -70,15 +70,15 @@ COMMANDS = {
     'draft' : {
         'classDescription': 'Commands that create and delete drafts, or modify the players inside them',
         'draftcreate' : {
-            'basicDef' : 'Creates a draft from a user-specified .cub file with a user-specified name',
-            'complexDef' : ('[Usage: !draftcreate cubefile draftname]\n' + ' ' * 14 + 
-                            'Creates a draft in the message channel from cubefile.cub named draftname, up to ' +
+            'basicDef' : 'Creates a draft from a user-specified file with a user-specified name',
+            'complexDef' : ('[Usage: !draftcreate file draftname]\n' + ' ' * 14 + 
+                            'Creates a draft in the message channel from cubefile.cub or setfile.set named draftname, up to ' +
                             str(DRAFTS_PER_CHANNEL) + '. Draftname cannot contain spaces')
         },
         'draftjoin' : {
             'basicDef' : 'Join user-specified draft in the message channel if it exists',
             'complexDef' : ('[Usage: !draftjoin draftname (in channel of draft)]\n' + ' ' * 13 +
-                            'Joins draft draftname in the message channel, trying to fire the cube if the draft now has ' +
+                            'Joins draft draftname in the message channel, trying to fire the draft if it now has ' +
                             str(PLAYERS_PER_DRAFT) + ' players. Draftname is case-insensitive.')
         },
         'draftleave' : {
@@ -193,7 +193,7 @@ ADMIN_COMMANDS = {
 
 RULES_GUIDE = ('```css\n[RULES GUIDE]```\n' +
                 'Each of the ' + str(PLAYERS_PER_DRAFT) + ' players gets ' + str(NUM_PACKS) + ' ' + str(PACK_SIZE) + 
-                '-card pack(s) from a pool of ~160 cards (that has duplicates of some cards).\n' +
+                '-card pack(s) from a unique pool of ~160 cards. Alternatively, they open 5 packs of a 9-card core set\n' +
                 '\t1) Each player opens 1 of their packs\n' + '\t2) Each player takes 1 card from their pack\n' +
                 '\t3) The players pass the pack between themselves in a circle, taking turns picking 1 card from ' +
                 'their packs, until all ' + str(NUM_PACKS) + ' packs have been picked clean\n\n' +
@@ -230,7 +230,9 @@ START_GUIDE = ('```css\n[START GUIDE]```\n' +
                 
 CUBE_GUIDE = ('```css\n[CUBE GUIDE]```\n' +
                 'Check pinned for cube contents, dummy\n' +
-                '\t\"beta.cub\" has 179 cards: 103 monsters, 40 spells, 36 traps')
+                '\t\"beta.cub\" has 179 cards: 103 monsters, 40 spells, 36 traps\n' +
+                '\t\"DOC.set\" has 200 cards: 129 monsters, 46 spells, 25 traps\n' +
+                '\t\"TEB.set\" has jackshit\n')
               
 ADMIN_GUIDE = ('```css\n[ADMINS GUIDE]```\n' +
                 '\"!gamehelp command\" should be informative enough for the admin commands, so this guide will mostly note differences ' +

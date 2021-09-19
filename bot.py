@@ -13,8 +13,8 @@ from draft import *
 client = discord.Client()
 
 # Draft specifications
-PACK_SIZE = constants.PACK_SIZE
 NUM_PACKS = constants.NUM_PACKS
+PACK_SIZE = constants.PACK_SIZE
 NUM_PLAYERS = constants.PLAYERS_PER_DRAFT
 
 STAPLES_CUB = constants.STAPLES_CUB
@@ -24,7 +24,7 @@ ALLOWED_CHANNELS = constants.ALLOWED_CHANNELS
 MAX_DRAFTS = constants.DRAFTS_PER_CHANNEL
 
 # 15 < IGNORED_REACTION. Reactions are mapped from 1-15 based
-# on PACK_SIZE, so the ignored value must be greater than those
+# on draft.packSize, so the ignored value must be greater than those
 # values
 IGNORED_REACTION = 100
 
@@ -61,31 +61,48 @@ currentPlayers = {}
 # Import and map cube files to their card pools.
 def __import_cubes():
     global cubes
-    for cub in os.listdir('cubes'):
+    for cub in os.listdir('cardpools'):
         if cub.endswith('.cub'):
             CardList = []
             print('Cube list discovered. Importing.')
-            with open('cubes/' + cub) as cubeFile:
+            with open('cardpools/' + cub) as cubeFile:
                 cardDict = json.load(cubeFile)
                 # Instantiate a new CardInfo object for each card in the list. Definitely could pull in more info from the JSON - there's a lot there.
                 for card in cardDict:
                     CardList.append(cardInfo.cardJsonToCardInfo(card))
             cubes[cub] = CardList
+            
+# Import and map set files to their card pools, categorized by rarity.
+def __import_sets():
+    global sets
+    for cardSet in os.listdir('cardpools'):
+        if cardSet.endswith('.set'):
+            CardList = []
+            print('Set list discovered. Importing.')
+            sets[cardSet] = {}
+            with open('cardpools/' + cardSet) as setFile:
+                cardDict = json.load(setFile)
+                # Instantiate a new CardInfo object for each card in the list. Definitely could pull in more info from the JSON - there's a lot there.
+                for card in cardDict:
+                    rarity = card['rarity']
+                    if rarity not in sets[cardSet].keys():
+                        sets[cardSet][rarity] = []
+                    sets[cardSet][rarity].append(cardInfo.cardJsonToCardInfo(card))
 
 # Import and map staple files to their card pools.
 def __import_staples():
     global staples
-    for cub in os.listdir('cubes/staples'):
-        if cub.endswith('.cub'):
+    for staplePool in os.listdir('cardpools/staples'):
+        if staplePool.endswith('.cub'):
             CardList = []
             print('Staple list discovered. Importing.')
-            with open('cubes/staples/' + cub) as stapleFile:
+            with open('cardpools/staples/' + staplePool) as stapleFile:
                 cardDict = json.load(stapleFile)
                 # Instantiate a new CardInfo object for each card in the list. Definitely could pull in more info from the JSON - there's a lot there.
                 for card in cardDict:
                     CardList.append(cardInfo.cardJsonToCardInfo(card))
-            staples[cub] = CardList
-            if len(staples[cub]) != NUM_STAPLES:
+            staples[staplePool] = CardList
+            if len(staples[staplePool]) != NUM_STAPLES:
                 raise Exception('staples/' + str(cub) + 'does not contain ' + str(NUM_STAPLES) + ' cards')
 
 # Dictionaries mapping cards to certain characteristics
@@ -166,6 +183,8 @@ async def __allowChannel(message):
 
 __import_cubes()
 print('Cubes imported')
+__import_sets()
+print('Sets imported')
 __import_staples()
 print('Staples imported')
 
@@ -287,16 +306,13 @@ async def on_message(message):
                         'where commandclass\n\tis one of the following: ' + str(COMMAND_CLASSES) + '\n\n' +
                         'Can view more detailed information about a specific command with \"!gamehelp command\" ' + 
                         '(ex. \"!gamehelp gamehelp\")\n\n' + 'Can view guides with \"!gamehelp guide\". Current guides: ' +
-                        str(COMMAND_GUIDES) + '```\n')
+                        str(list(COMMAND_GUIDES.keys())) + '```\n')
                         
             if 'Admin' in str(author.roles) or 'Moderator' in str(author.roles):
                 outputMsg += 'Admin-only commands are underlined.\n' +'__Admin Guides__: ' + str(ADMIN_COMMAND_GUIDES) + '\n'
             # Print the basic information for each command, including admin commands if player is admin
             for commandClass in COMMAND_CLASSES:
                 # Make sure message doesn't exceed discord message cap
-                if len(outputMsg) > 1600:
-                    await author.send(outputMsg)
-                    outputMsg = '_ _'
                 try:
                     classCommands = COMMANDS[commandClass]
                     outputMsg += '\n**' + commandClass + '**: '
@@ -305,10 +321,18 @@ async def on_message(message):
                             outputMsg += classCommands[command] + '\n'
                         else:
                             outputMsg += '\t!' + command + ' - ' + classCommands[command]['basicDef'] + '\n'
+                        # Make sure output isn't too long
+                        if len(outputMsg) > 1600:
+                            await author.send(outputMsg)
+                            outputMsg = '_ _'
                     if 'Admin' in str(author.roles) or 'Moderator' in str(author.roles):
                         classAdminCommands = ADMIN_COMMANDS[commandClass]
                         for adminCommand in classAdminCommands:
                             outputMsg += '\t__!' + adminCommand + '__ - ' + classAdminCommands[adminCommand]['basicDef'] + '\n'
+                            # Make sure output isn't too long
+                            if len(outputMsg) > 1600:
+                                await author.send(outputMsg)
+                                outputMsg = '_ _'
                 except KeyError as e:
                     continue
             await msgChannel.send('I sent you the requested gamehelp manual!')
@@ -317,54 +341,60 @@ async def on_message(message):
         
 
 
-    # Creates a draft from a user-specified .cub file with a user-specified name
-    # Usage: !draftcreate cubefile draftname
+    # Creates a draft from a user-specified file with a user-specified name
+    # Usage: !draftcreate file draftname
     if '!draftcreate' == splitMsg[0]:
         if not await __allowChannel(message):
             return
         elif len(splitMsg) != 3:
-            await msgChannel.send('Command should be used in form \"!draftcreate cubefile draftname\", ' +
-                 'where cubefile is one of the following: ' + str(list(cubes.keys())))
+            await msgChannel.send('Command should be used in form \"!draftcreate file draftname\", ' +
+                 'where file is one of the following: ' + str(list(cubes.keys())) + ' or ' + str(list(sets.keys())))
             return
  
-        cubeFile = splitMsg[1]
+        file = splitMsg[1]
         draftName = splitMsg[2]
 
-        # Check if the user-specified .cub file exists
-        if cubeFile in cubes:
-            # Check if the user-specified .cub contains adequate number of cards
-            requiredCubeSize = PACK_SIZE * NUM_PACKS * NUM_PLAYERS
-            userCubeSize = len(cubes[cubeFile])
+        # Check if the user-specified file exists in databse
+        if file in cubes or file in sets:
+            # Check if the file is a .cub and  contains adequate number of cards
+            if file.endswith('.cub'):
+                requiredCubeSize = PACK_SIZE * NUM_PACKS * NUM_PLAYERS
+                cardPool = cubes[file]
+                userCubeSize = len(cardPool)
 
-            if (userCubeSize < requiredCubeSize):
-                await msgChannel.send('Cube ' + cubeFile + ' has ' + str(userCubeSize) +
-                    ' cards, but you need '  + str(requiredCubeSize))
+                if (userCubeSize < requiredCubeSize):
+                    await msgChannel.send('Cube ' + file + ' has ' + str(userCubeSize) +
+                        ' cards, but you need '  + str(requiredCubeSize))
+                    return
             else:
-                # Check if a draft already exists in the channel the command was issued in
-                # Add the new draft to the other name->draft mappings if drafts existed in the channel prior
-                if msgChannel in drafts:
-                    # Check if a draft with the same name already exists in the channel the command was issued in
-                    if draftName in drafts[msgChannel]:
-                        await msgChannel.send('Cannot create a draft with the same name as one ' +
-                            'that already exists in this channel')
-                        return
-                    elif len(drafts[msgChannel]) >= MAX_DRAFTS:
-                        await msgChannel.send('Only ' + str(MAX_DRAFTS) + ' drafts are allowed in a channel!')
-                        return
-                    else:
-                        if STAPLES_CUB == None:
-                            drafts[msgChannel][draftName] = Draft(draftName, cubes[cubeFile], msgChannel)
-                        else:
-                            drafts[msgChannel][draftName] = Draft(draftName, cubes[cubeFile], msgChannel, staples[STAPLES_CUB])
-                # Create a new channel->{name->draft} mapping otherwise
+                cardPool = sets[file]
+
+            # Check if a draft already exists in the channel the command was issued in
+            # Add the new draft to the other name->draft mappings if drafts existed in the channel prior
+            if msgChannel in drafts:
+                # Check if a draft with the same name already exists in the channel the command was issued in
+                if draftName in drafts[msgChannel]:
+                    await msgChannel.send('Cannot create a draft with the same name as one ' +
+                        'that already exists in this channel')
+                    return
+                elif len(drafts[msgChannel]) >= MAX_DRAFTS:
+                    await msgChannel.send('Only ' + str(MAX_DRAFTS) + ' drafts are allowed in a channel!')
+                    return
                 else:
                     if STAPLES_CUB == None:
-                        drafts[msgChannel] = {draftName: Draft(draftName, cubes[cubeFile], msgChannel)}
+                        drafts[msgChannel][draftName] = Draft(draftName, cardPool, msgChannel)
                     else:
-                        drafts[msgChannel] = {draftName: Draft(draftName, cubes[cubeFile], msgChannel, staples[STAPLES_CUB])}
-                await msgChannel.send('Draft created. Players can now join.')
+                        drafts[msgChannel][draftName] = Draft(draftName, cardPool, msgChannel, staples[STAPLES_CUB])
+            # Create a new channel->{name->draft} mapping otherwise
+            else:
+                if STAPLES_CUB == None:
+                    drafts[msgChannel] = {draftName: Draft(draftName, cardPool, msgChannel)}
+                else:
+                    drafts[msgChannel] = {draftName: Draft(draftName, cardPool, msgChannel, staples[STAPLES_CUB])}
+            await msgChannel.send('Draft created. Players can now join.')
         else:
-            await msgChannel.send('Cube not found, please enter one from this list next time:\n' + str(list(cubes.keys())))
+            await msgChannel.send('File not found, please enter one from these lists next time:\n' + str(list(cubes.keys())) +
+                '\n' + str(list(sets.keys())))
         return
 
     # Join user-specified draft in the message channel if it exists. If that draft now contains NUM_PLAYERS players,
@@ -451,7 +481,7 @@ async def on_message(message):
                         draft.kick(player.id)
                     # Check that all players are ready and no one left in the middle of ready check
                     if len(readyPlayers) == NUM_PLAYERS and len(draft.players) == NUM_PLAYERS:
-                        await msgChannel.send(str(NUM_PACKS * NUM_PLAYERS) + ' packs of Draft, starting NOW!')
+                        await msgChannel.send(str(draft.numPacks * NUM_PLAYERS) + ' packs of Draft, starting NOW!')
                         draft.startDraft()
                     else:
                         await msgChannel.send('The ready check has failed. Draft \"' + draftName + '\" cannot fire :(.')
@@ -832,8 +862,8 @@ async def on_message(message):
         return
 
     # Lists all cards in user-specified cube file. Cards shown can be filtered optionally
-    # based on additional argument
-    # Spirits might be bugged
+    # based on additional argument.
+    # Spirits might be bugged, doesn't work yet with sets
     # Usage: !showcubemetrics cubefile *filter
     #   where filter can be "attr", "type", "level", "tuner", "extra"
     if '!showcubemetrics' == splitMsg[0]:
