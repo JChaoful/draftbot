@@ -309,7 +309,7 @@ async def on_message(message):
                         str(list(COMMAND_GUIDES.keys())) + '```\n')
                         
             if 'Admin' in str(author.roles) or 'Moderator' in str(author.roles):
-                outputMsg += 'Admin-only commands are underlined.\n' +'__Admin Guides__: ' + str(ADMIN_COMMAND_GUIDES) + '\n'
+                outputMsg += 'Admin-only commands are underlined.\n' +'__Admin Guides__: ' + str(list(ADMIN_COMMAND_GUIDES.keys())) + '\n'
             # Print the basic information for each command, including admin commands if player is admin
             for commandClass in COMMAND_CLASSES:
                 # Make sure message doesn't exceed discord message cap
