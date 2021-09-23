@@ -35,9 +35,12 @@ errorMsg = '\n\n'
 
 #heart of it
 for line in cardList:
+    # Ignore blank lines
+    if line == '':
+        continue
     # If a line is found that starts and end with dashes, interpret the line
     # as a rarity to start categorizing cards into
-    if line.startswith('-') and line.endswith('-'):
+    elif line.startswith('-') and line.endswith('-'):
         rarity = line.lstrip('-').rstrip('-')
         if (rarity not in validRarities):
             errorMsg += 'not a valid rarity:' + rarity + '\n'
