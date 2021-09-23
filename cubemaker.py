@@ -56,7 +56,7 @@ for line in cardList:
         # If card name is found, store it as a matched card (alongside user-specified alt-art and alt card ids)
         else:    
             # NOTE: match could have multiple elements. We only ever expect it to have one.
-            matchedCard = match[0]
+            matchedCard = match[0].copy()
             imageUrl = ''
             cardId = ''
             # User requested alt-art and alt card ID
