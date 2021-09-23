@@ -135,7 +135,6 @@ class Timer:
                         asyncio.create_task(player.user.send('Ran out of time. WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE DRAFT! WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE DRAFT! WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE DRAFT! https://tenor.com/view/wandavision-wanda-this-will-be-warning-gif-20683220'))
                     if player.missedpicks == 3:
                         asyncio.create_task(player.user.send('Ran out of time. You have been kicked for missing 3 picks. Three strikes! you\'re out! https://tenor.com/view/strike-ponche-bateador-strike-out-swing-gif-15388719'))
-                        asyncio.create_task(self.draft.channel.send('You\'re way too slow at picking.. Maybe these\'ll help?', file = discord.File(open(shadow, 'rb'))))
                         asyncio.create_task(self.draft.channel.send('Player ' + player.user.name + ' has missed 3 picks and has been kicked!'))
                         self.draft.kick(player.user.id)
 
@@ -146,7 +145,8 @@ class Timer:
 class Draft:
     # name: The name of the draft
     # cardPool: The cardPool the pool was created from
-    # pool: The cards remaining to be picked from. Sets do not have pools
+    # pool: The cards remaining to be picked from the overall cube pool. Sets do not have pools
+    # staples: The optional pool of staples players can pick from at the end of the draft
     # numPacks: number of packs to open
     # packSize: mumber of cards in each pack
     # mode: whether cardPool is set or cube
@@ -193,6 +193,8 @@ class Draft:
     def __printRound(self, roundNumber):
         matchups = self.matches[roundNumber]
         outputMsg = 'Matches for round ' + str(roundNumber) + ':\n'
+        afkIDs = []
+        
         for match in range(math.floor(len(matchups) / 2)):
             playerOneID = matchups[2 * match]
             playerTwoID = matchups[2 * match + 1]
@@ -206,12 +208,16 @@ class Draft:
                 elif playerTwoID == -1 and playerOneID != -1:
                     outputMsg += '\t' + self.players[playerOneID].user.mention + ' has a bye this round!\n'
                     self.players[playerOneID].matchesPlayed += 1
-                self.matches[roundNumber].remove(playerOneID)
-                self.matches[roundNumber].remove(playerTwoID)
+                afkIDs.append(playerOneID)
+                afkIDs.append(playerTwoID)
             # Otherwise output the match
             else:
                 outputMsg += ('\t' +  self.players[playerOneID].user.mention + ' vs ' +
                     self.players[playerTwoID].user.mention + '\n')
+                    
+        # Remove the afk players from the current round
+        for afkID in afkIDs:
+            self.matches[roundNumber].remove(afkID)
         asyncio.create_task(self.channel.send(outputMsg))
     
     # Returns the minimum roll from random numRolls rolls (from 0 to 47)
@@ -295,11 +301,15 @@ class Draft:
             noShow.matchesPlayed += 1
             winner.matchesPlayed += 1
             
+            # Check if reported no-show match was last match in a round and advance the round if it was
+            if len(self.matches[self.currentRound]) == 0:
+                self.currentRound += 1
+            
             # Make sure the afk marker is "y" or "n"
             if afk == 'y':
+                asyncio.create_task(self.channel.send(noShow.user.name + ' has been removed from the tournament for being AFK'))
                 self.kick(noShowID)
             elif afk == 'n':
-                # Check if reported no-show match was last match in a round
                 self.checkMatches()
             else:
                 return False
