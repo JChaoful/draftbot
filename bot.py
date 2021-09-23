@@ -205,7 +205,7 @@ async def on_raw_reaction_add(payload):
     userID = payload.user_id
     botID = client.user
     channelType = str(type(client.get_channel(payload.channel_id)))
-    emoji = str(payload.emoji.name)
+    emoji = payload.emoji.name
     
     # Makes sure:
     # (1) Reaction is in DM
@@ -441,23 +441,26 @@ async def on_message(message):
                     for player in draft.players.values():
                         await player.user.send('Draft \"' + draftName + '\" is ready to fire! Please respond with ' +
                         '\"y\" or \"n\" to indicate whether or not you are ready in the next 15 seconds!')
-                    timer = Timer(length = 11)
+
                     readyPlayers = []               
                     afkPlayers = []
-                    # Timer has expired
+                    
+                    # Returns True if
+                    # 15 second has passed
                     # OR
-                    # Ready check passes if user is a player in the draft that has not already responded, and
+                    # Ready check passes if user is a player in the showdown that has not already responded, and
                     # the message is in DMs and starts with "y" or "n"
                     def check(m):
-                        return (timer.expired == True or m.author.id in draft.players and
+                        return (m.author.id in sealed.players and
                             isinstance(m.channel, discord.DMChannel) and
                             m.author not in readyPlayers and m.author not in afkPlayers and
                             (m.content.lower().startswith("y") or m.content.lower().startswith("n")))
                     
-                    while timer.expired == False and len(readyPlayers) < NUM_PLAYERS:
-                        response = await client.wait_for('message', check = check)
-                        # Ignore messages very near the end of the timer
-                        if timer.expired == False:
+                    # Returns True iff all players have responded
+                    async def readyCheck():
+                        while len(readyPlayers) + len(afkPlayers) < maxPlayers:
+                            response = await client.wait_for('message', check = check)
+                                            
                             if response.content.lower().startswith("y"):
                                 await msgChannel.send('Player ' + response.author.name + ' is ready!')
                                 await response.author.send("You have confirmed that you are ready!")
@@ -466,15 +469,20 @@ async def on_message(message):
                                 await msgChannel.send('Player ' + response.author.name + ' is NOT ready!')
                                 await response.author.send("You have confirmed that you are NOT ready!")
                                 afkPlayers.append(response.author)
+
+                        return True
                     
-                    # All players that did not respond in time are treated as AFK
-                    for player in draft.players.values():
-                        if player.user not in readyPlayers and player.user not in afkPlayers:
-                            await msgChannel.send('Player ' + player.user.name + ' did not respond ' +
-                                'to the ready check in time!')
-                            await player.user.send("You did not respond in time for draft \"" + draftName +
-                                "\" in channel " + str(msgChannel))
-                            afkPlayers.append(player.user)
+                    try:
+                        allReady = await asyncio.wait_for(readyCheck(), timeout = 15)
+                    except asyncio.TimeoutError:
+                        # All players that did not respond in time are treated as AFK
+                        for player in sealed.players.values():
+                            if player.user not in readyPlayers and player.user not in afkPlayers:
+                                await msgChannel.send('Player ' + player.user.name + ' did not respond ' +
+                                    'to the ready check in time!')
+                                await player.user.send("You did not respond in time for Sealed Showdown \"" + sealedName +
+                                    "\" in channel " + str(msgChannel))
+                                afkPlayers.append(player.user)
 
                     for player in afkPlayers:
                         currentPlayers.pop(player.id)
@@ -641,24 +649,33 @@ async def on_message(message):
             tempidpoolnoextra = []
             tempidpoolextra = []
             tempidpoolside = []
-            overflow_counter = 0
+            overflowCards = []
 
             for card in player.pool:
                 #print('card name = {0}, card type = {1}, card id = {2}'.format(card.name, card.cardType, card.id))
                 if (card.cardType != (('Synchro Monster') or ('Synchro Tuner Monster')) and
                     (card.cardType != 'XYZ Monster') and
                     (card.cardType != 'Fusion Monster')):                
-                    tempidpoolnoextra.append(card.id) #puts the ids of the main deck cards in a list
+                    #Puts the ids of the main deck cards in the main deck if there's room
+                    if len(tempidpoolnoextra) < 60:
+                        tempidpoolnoextra.append(card.id) #puts the ids of the main deck cards in a list
+                    else:
+                        if len(tempidpoolside) < 15:
+                            tempidpoolside.append(card.id)
+                        else:
+                            overflowCards.append(card.name)
                 elif ('xyz' in card.cardType.lower() or
                     'synchro' in card.cardType.lower() or 
                     'fusion monster' in card.cardType.lower()):
                     #Puts the ids of the extra deck cards in the extra deck if there's room
-                    if (overflow_counter < 14):
+                    if len(tempidpoolextra) < 15:
                         tempidpoolextra.append(card.id) 
-                        overflow_counter = overflow_counter + 1
-                    #Otherwise store extra deck cards in side deck
-                    else: 
-                        tempidpoolside.append(card.id) #puts the ids of the extra deck cards in an overflow side list
+                    #Otherwise store extra deck cards in side deck if there's room
+                    else:
+                        if len(tempidpoolside) < 15:
+                            tempidpoolside.append(card.id) #puts the ids of the extra deck cards in an overflow side list
+                        else:
+                            overflowCards.append(card.name)
 
             #This whole block formats their cards for the .ydk format
             ydkString = ''
@@ -679,6 +696,8 @@ async def on_message(message):
                 ydkString+='%s\n' % listitem
 
             asyncio.create_task(author.send(file = discord.File(fp = StringIO(ydkString),filename = 'YourDraftPool.ydk')))
+            if len(overflowCards) > 0:
+                asyncio.create_task(author.send('These cards could not fit into duelingbook: ' + str(overflowCards)))
             return
         except KeyError as e:
             await msgChannel.send('You are not in a draft.')
@@ -871,7 +890,7 @@ async def on_message(message):
             return
         if 'Admin' in str(author.roles) or 'Moderator' in str(author.roles): 
             if len(splitMsg) < 2 or len(splitMsg) > 3:
-                await msgChannel.send('Command should be used in form \"!showcube cubefile *filter\", '  +
+                await msgChannel.send('Command should be used in form \"!showcubemetrics cubefile *filter\", '  +
                     'where filter is optional and can be \"attr\", \"type\", \"level\", \"tuner\", or \"extra\"')
                 return
             cubeFile = splitMsg[1]
@@ -924,17 +943,26 @@ async def on_message(message):
                         if ((card.cardType != ('Synchro Monster') or ('Synchro Tuner Monster')) and
                         (card.cardType != 'XYZ Monster') and
                         (card.cardType != 'Fusion Monster')):                
-                            tempidpoolnoextra.append(card.id) #puts the ids of the main deck cards in a list
+                            #Puts the ids of the main deck cards in the main deck if there's room
+                            if len(tempidpoolnoextra) < 60:
+                                tempidpoolnoextra.append(card.id) #puts the ids of the main deck cards in a list
+                            else:
+                                if len(tempidpoolside) < 15:
+                                    tempidpoolside.append(card.id)
+                                else:
+                                    overflowCards.append(card.name)
                         elif ('xyz' in card.cardType.lower() or
                         'synchro' in card.cardType.lower() or 
                         'fusion monster' in card.cardType.lower()):
                             #Puts the ids of the extra deck cards in the extra deck if there's room
-                            if (overflow_counter < 14):
+                            if len(tempidpoolextra) < 15:
                                 tempidpoolextra.append(card.id) 
-                                overflow_counter = overflow_counter + 1
-                            #Otherwise store extra deck cards in side deck
-                            else: 
-                                tempidpoolside.append(card.id) #puts the ids of the extra deck cards in an overflow side list
+                            #Otherwise store extra deck cards in side deck if there's room
+                            else:
+                                if len(tempidpoolside) < 15:
+                                    tempidpoolside.append(card.id) #puts the ids of the extra deck cards in an overflow side list
+                                else:
+                                    overflowCards.append(card.name)
                                 
                     #This whole block formats their cards for the .ydk format
                     ydkName = player.user.name + 'DraftPool.ydk'
@@ -956,6 +984,8 @@ async def on_message(message):
                         ydkString+='%s\n' % listitem
 
                     asyncio.create_task(author.send(file = discord.File(fp = StringIO(ydkString),filename = ydkName)))
+                    if len(overflowCards) > 0:
+                        asyncio.create_task(author.send('These cards could not fit into duelingbook: ' + str(overflowCards)))
             except KeyError as e:
                 await msgChannel.send('Draft \"' +  draftName + 
                     '\" does not exist in this channel. Use \"!showdrafts\" to show current drafts.')
@@ -967,7 +997,7 @@ async def on_message(message):
     # Usage: !matchundo @loser @winner
     if '!matchundo' == splitMsg[0]:
         if not await __allowChannel(message):
-                    return
+            return
         if 'Admin' in str(author.roles) or 'Moderator' in str(author.roles): 
             if len(splitMsg) != 3 or len(message.mentions) != 2: 
                 await msgChannel.send('Command should be used in form \"!matchundo @loser @winner\" ' +
@@ -1028,7 +1058,7 @@ async def on_message(message):
     # Usage: !matchmanual @loser @winner
     if '!matchmanual' == splitMsg[0]:
         if not await __allowChannel(message):
-                    return
+            return
         if 'Admin' in str(author.roles) or 'Moderator' in str(author.roles): 
             if len(splitMsg) != 3 or len(message.mentions) != 2: 
                 await msgChannel.send('Command should be used in form \"!matchmanual @loser @winner\" ' +
@@ -1094,7 +1124,7 @@ async def on_message(message):
     # Usage: !matchnoshow afk(y or n) @missingPlayer @activePlayer
     if '!matchnoshow' == splitMsg[0]:
         if not await __allowChannel(message):
-                    return
+            return
         if 'Admin' in str(author.roles) or 'Moderator' in str(author.roles): 
             usage = ('Command should be used in form \"!matchnoshow afk(y or n) @missingPlayer ' +
                     '@activePlayer\" in the channel of the match you want to manually report a no-show in. ' + 
@@ -1111,8 +1141,9 @@ async def on_message(message):
             
             # Make sure user specified whether or not player left, and the no-show is not from a player
             # to themself
-            if afk != 'y' or afk != 'n':
+            if afk != 'y' and afk != 'n':
                 awaitMsgChannel.send(usage)
+                return
             elif noShow.id == winner.id:
                 await msgChannel.send('Can\'t record a no-show between a user and themself.')
                 return
@@ -1145,6 +1176,9 @@ async def on_message(message):
                         await msgChannel.send('Either ' + noShow.name + ' or ' + winner.name + ' reported a loss this round ' +
                             'already. Consider using \"draftEnd\" if the issue persists.')
                         return
+                    # Remove player from currentPlayers if afk and successfully removed from tournament
+                    if afk == 'y':
+                        currentPlayers.pop(noshow.id)
                     
                     await msgChannel.send('A manual no-show from ' + noShow.name + ' to ' + winner.name +
                         ' has been recorded in \"' + noShowDraftName + '\".')
@@ -1173,14 +1207,14 @@ async def on_message(message):
     #         asyncio.create_task(author.send(file=discord.File(fp=StringIO(logtosend),filename='PickLog.csv'))) 
 
     # Anti Merchbot Commands
-    if '!join' == splitMsg[0] and message.channel.name in ALLOWED_CHANNELS:
+    if ('!join' == splitMsg[0] or '!in' == splitMsg[0] or '!j' == splitMsg[0]) and message.channel.name in ALLOWED_CHANNELS:
         await msgChannel.send('We do \"!draftjoin\" around these parts, pardner. Check \"!gamehelp\"')
         return
-    if '!leave' == splitMsg[0] and message.channel.name in ALLOWED_CHANNELS:
+    if ('!leave' == splitMsg[0] or '!out' == splitMsg[0]) and message.channel.name in ALLOWED_CHANNELS:
         await msgChannel.send('We do \"!draftleave\" around these parts, partner. Check \"!gamehelp\"')
         return
     if '!q' == splitMsg[0] and message.channel.name in ALLOWED_CHANNELS:
-        await msgChannel.send('We do \"!draftshow\" around these parts, gardner. Check \"!gamehelp\"')
+        await msgChannel.send('We do \"!showdrafts\" around these parts, gardner. Check \"!gamehelp\"')
         return
     if '!loss' == splitMsg[0] and message.channel.name in ALLOWED_CHANNELS:
         await msgChannel.send('We do \"!matchloss\" around these parts, bartner. \"!undo\" that loss quickly, and check \"!gamehelp\"')
